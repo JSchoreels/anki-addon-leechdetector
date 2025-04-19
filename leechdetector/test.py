@@ -13,7 +13,7 @@ from LeechDetector import LeechDetector
 class LeechDetectorTest(unittest.TestCase):
 
     def setUp(self):
-        self.collection = Collection("collection.anki2")
+        self.collection = Collection("data/collection.anki2")
         self.leechdetector = LeechDetector(self.collection)
 
         self.card_ids = [1710712242101, 1708207159229, 1723541612090, 1708259347988, 1708787872864, 1716748875647, 1715717287839]
