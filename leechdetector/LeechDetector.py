@@ -1,8 +1,21 @@
+from typing import Callable
+
+from anki.cards import CardId
 from anki.collection import Collection
+from anki.stats_pb2 import CardStatsResponse
 from aqt import mw
 
 from AnkiValueParser import is_actual_review, is_failed, is_success, interval_to_days, time_to_days
 
+class LapseInfos:
+
+    def __init__(self, card_id : CardId, past_lapse_max_intervals : list[int], current_lapse_max_intervals : int):
+        self.card_id = card_id
+        self.past_lapse_max_intervals = past_lapse_max_intervals
+        self.current_lapse_max_intervals = current_lapse_max_intervals
+
+    def __repr__(self):
+        return f'Card : {self.card_id} Past Lapses : {self.past_lapse_max_intervals} Current Max Interval : {self.current_lapse_max_intervals}'
 
 class LeechDetector:
 
@@ -12,7 +25,7 @@ class LeechDetector:
         else:
             self.collection = collection
 
-    def get_max_successful_interval(self, card_id: int) -> int:
+    def get_max_successful_interval(self, card_id: CardId) -> int:
         """
         Get the biggest successful interval for a card.
         """
@@ -25,7 +38,7 @@ class LeechDetector:
         # Note : The last review is not considered as a successful review
         return max_successful_interval
 
-    def get_max_successful_interval_by_lapse(self, card_id: int) -> list[int]:
+    def get_max_successful_interval_by_lapse(self, card_id: CardId) -> LapseInfos:
         """
         For each lapse (when a card failed that day), the max successful interval is computed.
         :param card_id:
@@ -35,33 +48,28 @@ class LeechDetector:
 
         current_max_success_ivl = 0
         current_day = time_to_days(review_log[0].time)
-        previous_review = review_log[0]
 
         max_successful_interval_by_lapse = []
 
         for i, review in enumerate(review_log):
-            if is_actual_review(review):
-                if current_day != time_to_days(review.time):
-                    if is_success(review):
-                        current_max_success_ivl = max(current_max_success_ivl, interval_to_days(review.time) - interval_to_days(previous_review.time))
-                    else:
-                        max_successful_interval_by_lapse.append(current_max_success_ivl)
-                        current_max_success_ivl = 0
-                previous_review = review
-                current_day = interval_to_days(review.time)
+            if current_day != time_to_days(review.time):
+                if is_success(review):
+                    current_max_success_ivl = max(current_max_success_ivl, interval_to_days(review.time) - interval_to_days(review_log[i-1].time))
+                else:
+                    max_successful_interval_by_lapse.append(current_max_success_ivl)
+                    current_max_success_ivl = 0
+            current_day = interval_to_days(review.time)
 
-        if is_success(review):
-            max_successful_interval_by_lapse.append(current_max_success_ivl)
-
-        return max_successful_interval_by_lapse
+        return LapseInfos(card_id, max_successful_interval_by_lapse, current_max_success_ivl)
 
 
 
 
-    def get_sorted_revlog(self, card_id: int) -> list:
+    def get_sorted_revlog(self, card_id: CardId, filter: Callable[[CardStatsResponse.StatsRevlogEntry], bool] = lambda review: is_actual_review(review)) -> list:
         """
         Get the review log for a card.
         """
-        review_log = list(self.collection.get_review_logs(card_id=card_id))
-        review_log.reverse()
-        return review_log
+        # review_log = list(self.collection.get_review_logs(card_id=card_id))
+        # review_log.reverse()
+
+        return [review for review in reversed(list(self.collection.get_review_logs(card_id=card_id))) if filter(review)]

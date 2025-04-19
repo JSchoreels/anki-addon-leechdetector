@@ -15,18 +15,18 @@ class LeechDetectorTest(unittest.TestCase):
     def setUp(self):
         self.collection = Collection("collection.anki2")
         self.leechdetector = LeechDetector(self.collection)
-        self.cardid = CardId(1710712242101)
-        self.cardid2 = CardId(1708259347988)
+
+        self.card_ids = [1710712242101, 1708207159229, 1723541612090, 1708259347988, 1708787872864, 1716748875647, 1715717287839]
 
 
     def test_compute_lapses_sizes(self):
         display_revlog(self.leechdetector.get_sorted_revlog(self.cardid))
-        print(interval_to_duration_display(self.leechdetector.get_max_successful_interval(self.cardid)))
-        print(interval_to_duration_display(self.leechdetector.get_max_successful_interval(self.cardid2)))
+        for card_id in self.card_ids:
+            print(interval_to_duration_display(self.leechdetector.get_max_successful_interval(card_id)))
 
     def test_get_max_successful_interval_by_lapse(self):
-        print([interval for interval in self.leechdetector.get_max_successful_interval_by_lapse(self.cardid)])
-        print([interval for interval in self.leechdetector.get_max_successful_interval_by_lapse(self.cardid2)])
+        for card_id in self.card_ids:
+            print(self.leechdetector.get_max_successful_interval_by_lapse(card_id))
 
 
 
