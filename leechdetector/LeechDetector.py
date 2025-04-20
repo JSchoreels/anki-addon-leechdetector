@@ -1,3 +1,4 @@
+from statistics import mean, median
 from typing import Callable
 
 from anki.cards import CardId
@@ -9,13 +10,27 @@ from AnkiValueParser import is_actual_review, is_failed, is_success, interval_to
 
 class LapseInfos:
 
-    def __init__(self, card_id : CardId, past_lapse_max_intervals : list[int], current_lapse_max_intervals : int):
+    def __init__(self, card_id : CardId, past_max_intervals : list[int], current_lapse_max_intervals : int):
         self.card_id = card_id
-        self.past_lapse_max_intervals = past_lapse_max_intervals
+        self.past_max_intervals = past_max_intervals
         self.current_lapse_max_intervals = current_lapse_max_intervals
+        self.lapses_count = len(past_max_intervals)
+
+    def drop_count(self):
+        return sum([1 for i in range(1, self.lapses_count) if self.past_max_intervals[i - 1] > self.past_max_intervals[i]])
+
+    def biggest_drop_value(self):
+        return max([self.past_max_intervals[i-1] - self.past_max_intervals[i] for i in range(1, self.lapses_count)])
+
+    def average_max_interval(self):
+        return mean(self.past_max_intervals)
+
+    def median_max_interval(self):
+        return median(self.past_max_intervals)
+
 
     def __repr__(self):
-        return f'Card : {self.card_id} Past Lapses : {self.past_lapse_max_intervals} Current Max Interval : {self.current_lapse_max_intervals}'
+        return f'Card : {self.card_id} Past Lapses : ({self.lapses_count}) {self.past_max_intervals} (now:{self.current_lapse_max_intervals})  Drops:{self.drop_count()} BiggestDrop:{self.biggest_drop_value()} Mean:{self.average_max_interval():.2f} Median:{self.median_max_interval()}'
 
 class LeechDetector:
 
@@ -55,7 +70,7 @@ class LeechDetector:
             if current_day != time_to_days(review.time):
                 if is_success(review):
                     current_max_success_ivl = max(current_max_success_ivl, interval_to_days(review.time) - interval_to_days(review_log[i-1].time))
-                else:
+                elif current_max_success_ivl > 0 : # We don't really want a failed rep after a previous cycle to count as a cycle
                     max_successful_interval_by_lapse.append(current_max_success_ivl)
                     current_max_success_ivl = 0
             current_day = interval_to_days(review.time)

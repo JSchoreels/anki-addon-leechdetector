@@ -16,7 +16,8 @@ class LeechDetectorTest(unittest.TestCase):
         self.collection = Collection("data/collection.anki2")
         self.leechdetector = LeechDetector(self.collection)
 
-        self.card_ids = [1710712242101, 1708207159229, 1723541612090, 1708259347988, 1708787872864, 1716748875647, 1715717287839, 1711230892107, 1708440946044gi]
+        self.card_ids = [1710712242101, 1708207159229, 1723541612090, 1708259347988, 1708787872864, 1716748875647, 1715717287839, 1711230892107, 1708440946044,
+                         1727897994100] # relearn
 
 
     def test_compute_lapses_sizes(self):
