@@ -20,7 +20,9 @@ class LapseInfos:
         return sum([1 for i in range(1, self.lapses_count) if self.past_max_intervals[i - 1] > self.past_max_intervals[i]])
 
     def biggest_drop_value(self):
-        return max([self.past_max_intervals[i-1] - self.past_max_intervals[i] for i in range(1, self.lapses_count)])
+        if self.drop_count() == 0:
+            return 0
+        return max([self.past_max_intervals[i-1] - self.past_max_intervals[i] for i in range(1, self.lapses_count) if self.past_max_intervals[i-1] - self.past_max_intervals[i] > 0])
 
     def average_max_interval(self):
         return mean(self.past_max_intervals)
@@ -30,7 +32,10 @@ class LapseInfos:
 
 
     def __repr__(self):
-        return f'Card : {self.card_id} Past Lapses : ({self.lapses_count}) {self.past_max_intervals} (now:{self.current_lapse_max_intervals})  Drops:{self.drop_count()} BiggestDrop:{self.biggest_drop_value()} Mean:{self.average_max_interval():.2f} Median:{self.median_max_interval()}'
+        if self.lapses_count > 0:
+            return f'Card : {self.card_id} Past Lapses : ({self.lapses_count}) {self.past_max_intervals} (now:{self.current_lapse_max_intervals})  Drops:{self.drop_count()} BiggestDrop:{self.biggest_drop_value()} Mean:{self.average_max_interval():.2f} Median:{self.median_max_interval()}'
+        else:
+            return f'Card : {self.card_id} No Lapse, Current Max Interval : {self.current_lapse_max_intervals}'
 
 class LeechDetector:
 
