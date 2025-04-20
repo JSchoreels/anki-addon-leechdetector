@@ -1,4 +1,5 @@
 import json
+import os
 import unittest
 
 from anki.collection import Collection
@@ -6,12 +7,13 @@ from anki.collection import Collection
 from leechdetector.AnkiValueParser import time_to_date, interval_to_duration_display, is_failed
 from leechdetector.leech_detector import LeechDetector
 
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class LeechDetectorTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.collection = Collection("data/collection.anki2")
+        cls.collection = Collection(os.path.join(THIS_DIR, "data/collection.anki2"))
         cls.leechdetector = LeechDetector(cls.collection)
 
         cls.card_ids = [1710712242101, 1708207159229, 1723541612090, 1708259347988, 1708787872864, 1716748875647, 1715717287839, 1711230892107, 1708440946044,
