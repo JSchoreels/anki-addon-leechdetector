@@ -25,42 +25,15 @@ def get_lapseinfos_for_card(webview : "aqt.webview.AnkiWebView") -> dict:
     leechdetector = LeechDetector()
     lapse_infos = leechdetector.get_lapse_infos(mw.col.sched.getCard().id)
 
-    filename = os.path.join(LOCAL_DIR, 'leechdetector_table.html')
+    html_template_filename = os.path.join(LOCAL_DIR, 'leechdetector_table.html')
+    js_template_filename = os.path.join(LOCAL_DIR, 'card_info_updated.js')
 
-    with open(filename, 'r') as template_table:
-        template = Template(f"{template_table.read()}")
-        table_html = template.substitute(lapse_infos.to_dict())
-        webview.eval(
-            f"""
-                function add_lapse_stats(){{
-                    const rows = document.querySelectorAll('tr');
-                    
-                    const table = document.getElementsByClassName('stats-table')[0];
-                    const tbody = table.querySelector('tbody') || table;
-                    tbody.insertAdjacentHTML('beforeend', `{table_html}`)
-                    
-                    const targetCell = document.querySelector('#past_max_intervals');
-                    
-                    let oldHref = window.location.href;
-                    const observer = new MutationObserver(mutations => {{
-                     if (oldHref != document.location.href) {{
-                          oldHref = document.location.href;
-                          new_card_id = document.location.href.split('/').pop() || parts.pop(); // Handle trailing slash
-                          console.log("Card Change Detected")
-                          pycmd("new_card_id:"+new_card_id, (new_past_max_intervals) => targetCell.textContent = new_past_max_intervals.toString())
-                      }}
-                    }});
-                    
-                    body = document.querySelector('body');
-                    observer.observe(body, {{ childList: true, subtree: true }});
-                }}
-                script = document.createElement('script')
-                script.textContent = `
-                    setTimeout(add_lapse_stats, 200);
-                `
-                document.body.append(script)
-            """
-        )
+    with open(html_template_filename, 'r') as html_template, open(js_template_filename, 'r') as js_template:
+        html_template = Template(html_template.read())
+        table_html = html_template.substitute(lapse_infos.to_dict())
+
+        js_template = Template(js_template.read())
+        webview.eval(js_template.substitute({"table_html" : table_html}))
 
 
 gui_hooks.webview_did_inject_style_into_page.append(
