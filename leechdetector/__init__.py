@@ -1,6 +1,8 @@
 # import the main window object (mw) from aqt
 from typing import List
 import os
+
+from anki.cards import CardId
 from anki.collection import Collection
 import aqt
 from aqt import mw
@@ -44,15 +46,9 @@ def get_lapseinfos_for_card(webview : "aqt.webview.AnkiWebView") -> dict:
                       }}
                     }});
                     
-                    if (cardidTd) {{
-                      console.log('Found the target <td>:', cardidTd);
-                    }}
-                    
                     console.log(document.getElementsByClassName('stats-table')[0]);
                     const table = document.getElementsByClassName('stats-table')[0];
-                    console.log(table)
                     const tbody = table.querySelector('tbody') || table;
-                    console.log(tbody)
                     tbody.insertAdjacentHTML('beforeend', `{table_html}`)
                     
                     const targetCell = document.querySelector('#past_max_intervals');
@@ -60,7 +56,7 @@ def get_lapseinfos_for_card(webview : "aqt.webview.AnkiWebView") -> dict:
                     const observer = new MutationObserver(mutations => {{
                       mutations.forEach(mutation => {{
                           console.log("Mutation detected")
-                          targetCell.textContent = {(lambda : leechdetector.get_lapse_infos(mw.col.sched.getCard().id).past_max_intervals)()};
+                          pycmd("new_card_id:"+cardidTd.textContent, (new_past_max_intervals) => targetCell.textContent = new_past_max_intervals.toString())
                       }});
                     }});
                     
@@ -77,4 +73,17 @@ def get_lapseinfos_for_card(webview : "aqt.webview.AnkiWebView") -> dict:
 
 gui_hooks.webview_did_inject_style_into_page.append(
     lambda w: get_lapseinfos_for_card(w) if isinstance(w, aqt.webview.AnkiWebView) and w.kind == AnkiWebViewKind.BROWSER_CARD_INFO else None
+)
+
+def handle_webview_did_receive_js_message(handled, message : str, context):
+    print(f"handled : {handled}")
+    print(f"message : {message}")
+    print(f"context : {context}")
+    if "new_card_id:" in message:
+        leechdetector = LeechDetector()
+        return True, leechdetector.get_lapse_infos(CardId(int(message.split(":")[1]))).past_max_intervals
+    return handled
+
+gui_hooks.webview_did_receive_js_message.append(
+    handle_webview_did_receive_js_message
 )
