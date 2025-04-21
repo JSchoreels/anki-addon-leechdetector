@@ -34,33 +34,25 @@ def get_lapseinfos_for_card(webview : "aqt.webview.AnkiWebView") -> dict:
             f"""
                 function add_lapse_stats(){{
                     const rows = document.querySelectorAll('tr');
-
-                    let cardidTd = null;
                     
-                    rows.forEach(row => {{
-                      const th = row.querySelector('th');
-                      const td = row.querySelector('td');
-                    
-                      if (th && td && th.textContent.trim() === 'Card ID') {{
-                        cardidTd = td;
-                      }}
-                    }});
-                    
-                    console.log(document.getElementsByClassName('stats-table')[0]);
                     const table = document.getElementsByClassName('stats-table')[0];
                     const tbody = table.querySelector('tbody') || table;
                     tbody.insertAdjacentHTML('beforeend', `{table_html}`)
                     
                     const targetCell = document.querySelector('#past_max_intervals');
                     
+                    let oldHref = window.location.href;
                     const observer = new MutationObserver(mutations => {{
-                      mutations.forEach(mutation => {{
-                          console.log("Mutation detected")
-                          pycmd("new_card_id:"+cardidTd.textContent, (new_past_max_intervals) => targetCell.textContent = new_past_max_intervals.toString())
-                      }});
+                     if (oldHref != document.location.href) {{
+                          oldHref = document.location.href;
+                          new_card_id = document.location.href.split('/').pop() || parts.pop(); // Handle trailing slash
+                          console.log("Card Change Detected")
+                          pycmd("new_card_id:"+new_card_id, (new_past_max_intervals) => targetCell.textContent = new_past_max_intervals.toString())
+                      }}
                     }});
                     
-                    observer.observe(cardidTd, {{ characterData: true, subtree: true, childList: true }});
+                    body = document.querySelector('body');
+                    observer.observe(body, {{ childList: true, subtree: true }});
                 }}
                 script = document.createElement('script')
                 script.textContent = `
