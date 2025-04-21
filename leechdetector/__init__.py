@@ -2,9 +2,8 @@
 from typing import List
 import os
 
-from anki.cards import CardId
-from anki.collection import Collection
 import aqt
+from anki.cards import CardId
 from aqt import mw
 from aqt.qt import *
 from aqt import gui_hooks
