@@ -25,15 +25,14 @@ def get_lapseinfos_for_card(webview : "aqt.webview.AnkiWebView") -> dict:
     leechdetector = LeechDetector()
     lapse_infos = leechdetector.get_lapse_infos(mw.col.sched.getCard().id)
 
-    html_template_filename = os.path.join(LOCAL_DIR, 'leechdetector_table.html')
-    js_template_filename = os.path.join(LOCAL_DIR, 'card_info_updated.js')
+    with (open(os.path.join(LOCAL_DIR, 'leechdetector_table.html'), 'r') as html_template,
+          open(os.path.join(LOCAL_DIR, 'card_info_updated.js'), 'r') as js_template):
 
-    with open(html_template_filename, 'r') as html_template, open(js_template_filename, 'r') as js_template:
-        html_template = Template(html_template.read())
-        table_html = html_template.substitute(lapse_infos.to_dict())
+        table_html = Template(html_template.read()).substitute(lapse_infos.to_dict())
 
-        js_template = Template(js_template.read())
-        webview.eval(js_template.substitute({"table_html" : table_html}))
+        webview.eval(
+            Template(js_template.read())
+            .substitute({"table_html" : table_html}))
 
 
 gui_hooks.webview_did_inject_style_into_page.append(
