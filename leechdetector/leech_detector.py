@@ -12,7 +12,7 @@ from leechdetector.lapse_infos import LapseInfos
 
 class LeechDetector:
 
-    def __init__(self, collection: Collection):
+    def __init__(self, collection: Collection = None):
         if not collection:
             self.collection = mw.col
         else:
