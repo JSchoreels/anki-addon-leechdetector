@@ -20,8 +20,6 @@ function add_lapse_stats(){
     body = document.querySelector('body');
     observer.observe(body, { childList: true, subtree: true });
 }
-script = document.createElement('script')
-script.textContent = `
-    setTimeout(add_lapse_stats, 200);
-`
-document.body.append(script)
+
+
+setTimeout(add_lapse_stats, 200);
