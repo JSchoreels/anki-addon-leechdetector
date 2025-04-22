@@ -6,7 +6,7 @@ import json
 
 class LapseInfos:
 
-    def __init__(self, card_id : CardId, past_max_intervals : list[int], current_lapse_max_intervals : int, outperformance_factor : int = 1.25):
+    def __init__(self, card_id : CardId, past_max_intervals : list[int], current_lapse_max_intervals : int, outperformance_factor : float = 1.25):
         self.card_id = card_id
         self.past_max_intervals = past_max_intervals
         self.current_lapse_max_intervals = current_lapse_max_intervals
@@ -17,7 +17,7 @@ class LapseInfos:
         return sum([1 for i in range(1, self.lapses_count) if self.past_max_intervals[i - 1] > self.past_max_intervals[i]])
 
     def failed_outperformance_count(self):
-        return sum([1 for i in range(1, self.lapses_count) if not self.past_max_intervals[i - 1] * self.outperformance_factor < self.past_max_intervals[i]])
+        return sum([1 for i in range(1, self.lapses_count) if not self.past_max_intervals[i - 1] < self.past_max_intervals[i] * self.outperformance_factor])
 
     def failed_outperformance_ratio(self):
         if self.lapses_count <= 1:
