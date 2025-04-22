@@ -39,6 +39,8 @@ class LeechDetector:
         """
         review_log = self.get_sorted_revlog(card_id)
 
+        if not review_log or len(review_log) == 0:
+            return LapseInfos(card_id, [], 0)
         current_max_success_ivl = 0
         current_day = time_to_days(review_log[0].time)
 

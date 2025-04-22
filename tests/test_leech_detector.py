@@ -16,19 +16,23 @@ class LeechDetectorTest(unittest.TestCase):
         cls.collection = Collection(os.path.join(THIS_DIR, "data/collection.anki2"))
         cls.leechdetector = LeechDetector(cls.collection)
 
-        cls.card_ids = [1710712242101, 1708207159229, 1723541612090, 1708259347988, 1708787872864, 1716748875647, 1715717287839, 1711230892107, 1708440946044,
-                         1727897994100] # relearn
+        cls.card_ids_reviewed = [1710712242101, 1708207159229, 1723541612090, 1708259347988, 1708787872864, 1716748875647, 1715717287839, 1711230892107, 1708440946044,
+                                 1727897994100] # relearn
+
+        cls.card_ids_new = [1549775726971]
+
+        cls.cards_ids_all = cls.card_ids_reviewed + cls.card_ids_new
 
 
     def test_get_max_successful_interval(self):
         self.assertListEqual(
-            list1 = [interval_to_duration_display(self.leechdetector.get_max_successful_interval(card_id)) for card_id in self.card_ids],
-            list2 = ['1.77 months', '3.50 months', '28 days', '30 days', '28 days', '21 days', '1.43 months', '1.43 months', '20 days', '13 days']
+            list1 = [interval_to_duration_display(self.leechdetector.get_max_successful_interval(card_id)) for card_id in self.cards_ids_all],
+            list2 = ['1.77 months', '3.50 months', '28 days', '30 days', '28 days', '21 days', '1.43 months', '1.43 months', '20 days', '13 days', '0 days']
         )
 
     def test_past_max_intervals(self):
         self.assertListEqual(
-            list1 = [self.leechdetector.get_lapse_infos(card_id).past_max_intervals for card_id in self.card_ids],
+            list1 = [self.leechdetector.get_lapse_infos(card_id).past_max_intervals for card_id in self.cards_ids_all],
             list2 = [[2, 20, 25],
                      [1, 3],
                      [4, 8],
@@ -38,7 +42,8 @@ class LeechDetectorTest(unittest.TestCase):
                      [5, 9, 4, 8, 8, 32, 9, 4],
                      [42, 38, 6, 2, 5],
                      [4, 15, 11, 14, 6, 5, 19, 15],
-                     [1, 1, 1, 6, 12, 9, 7, 5]]
+                     [1, 1, 1, 6, 12, 9, 7, 5],
+                     []]
         )
 
     def display_stats(self):

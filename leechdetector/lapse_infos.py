@@ -24,7 +24,7 @@ class LapseInfos:
             return 0
         return self.failed_outperformance_count() / (self.lapses_count - 1)
 
-    def biggest_drop_value(self):
+    def biggest_interval_drop(self):
         if self.drop_count() == 0:
             return 0
         return max([self.past_max_intervals[i-1] - self.past_max_intervals[i] for i in range(1, self.lapses_count) if self.past_max_intervals[i-1] - self.past_max_intervals[i] > 0])
@@ -38,7 +38,7 @@ class LapseInfos:
 
     def __repr__(self):
         if self.lapses_count > 0:
-            return f'Card : {self.card_id} Past Lapses : ({self.lapses_count}) {self.past_max_intervals} (now:{self.current_lapse_max_intervals})  Drops:{self.drop_count()} BiggestDrop:{self.biggest_drop_value()} Mean:{self.average_max_interval():.2f} Median:{self.median_max_interval()} FailedOutperforamnce:{self.failed_outperformance_count()} FailedOutperforamnceRatio:{self.failed_outperformance_ratio()*100:.2f}'
+            return f'Card : {self.card_id} Past Lapses : ({self.lapses_count}) {self.past_max_intervals} (now:{self.current_lapse_max_intervals})  Drops:{self.drop_count()} BiggestDrop:{self.biggest_interval_drop()} Mean:{self.average_max_interval():.2f} Median:{self.median_max_interval()} FailedOutperforamnce:{self.failed_outperformance_count()} FailedOutperforamnceRatio:{self.failed_outperformance_ratio() * 100:.2f}'
         else:
             return f'Card : {self.card_id} No Lapse, Current Max Interval : {self.current_lapse_max_intervals}'
 
@@ -48,3 +48,12 @@ class LapseInfos:
             "past_max_intervals": self.past_max_intervals,
             "current_lapse_max_intervals": self.current_lapse_max_intervals,
         }
+
+    def to_dict_enriched(self):
+        base = self.to_dict()
+        base.update({
+            "biggest_interval_drop" : self.biggest_interval_drop(),
+            "failed_outperformance_ratio" : self.failed_outperformance_ratio()
+        })
+        print(base)
+        return base
