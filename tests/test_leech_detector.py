@@ -49,7 +49,7 @@ class LeechDetectorTest(unittest.TestCase):
     def test_display_stats(self):
         lapse_infos = []
         for card_id in self.collection.find_cards('"deck:Japan::1. Vocabulary" -is:new prop:lapses>0'):
-            lapse_infos.append(self.leechdetector.get_lapse_infos(card_id))
+            lapse_infos.append(self.leechdetector.get_lapse_infos(card_id, outperformance_factor=1))
         total_card_count = len(self.collection.find_cards('"deck:Japan::1. Vocabulary" -is:new'))
         lapsed_card_count = len(lapse_infos)
         distribution_lapse_count = group_lapse_info_by_key(lapse_infos, lambda lapseInfo: lapseInfo.lapses_count)
@@ -70,10 +70,9 @@ class LeechDetectorTest(unittest.TestCase):
 
         ## Failed Outperformance Counts Ratio
         failed_outperformance_ratio = group_lapse_info_by_key(lapse_infos, lambda lapseInfo: int(lapseInfo.failed_outperformance_ratio() * 100 / 33.34))
-        print(f"Cards That had [2/3, 1.0] failed outperformance ratio lapse: {failed_outperformance_ratio[2]} ({failed_outperformance_ratio[0] / lapsed_card_count * 100:.2f}%)")
+        print(f"Cards That had [2/3, 1.0] failed outperformance ratio lapse: {failed_outperformance_ratio[2]} ({failed_outperformance_ratio[2] / lapsed_card_count * 100:.2f}%)")
         print(f"Cards That had [1/3, 2.3] failed outperformance ratio lapse: {failed_outperformance_ratio[1]} ({failed_outperformance_ratio[1] / lapsed_card_count * 100:.2f}%)")
-        card_count_other = sum([failed_outperformance_ratio_total for (failed_outperformance_ratio, failed_outperformance_ratio_total) in failed_outperformance_ratio.items() if failed_outperformance_ratio > 1])
-        print(f"Cards That had [0.0, 1/3] failed outperformance ratio lapse : {card_count_other} ({card_count_other / lapsed_card_count * 100:.2f}%)")
+        print(f"Cards That had [0.0, 1/3] failed outperformance ratio lapse : {failed_outperformance_ratio[0]} ({failed_outperformance_ratio[0] / lapsed_card_count * 100:.2f}%)")
 
 
         print(distribution_drops)
