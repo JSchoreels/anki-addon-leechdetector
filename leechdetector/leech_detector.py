@@ -5,9 +5,9 @@ from anki.collection import Collection
 from anki.stats_pb2 import CardStatsResponse
 from aqt import mw
 
-from leechdetector.AnkiValueParser import is_actual_review, is_failed, is_success, interval_to_days, time_to_days, \
+from .AnkiValueParser import is_actual_review, is_failed, is_success, interval_to_days, time_to_days, \
     time_to_date
-from leechdetector.lapse_infos import LapseInfos
+from .lapse_infos import LapseInfos
 
 
 class LeechDetector:

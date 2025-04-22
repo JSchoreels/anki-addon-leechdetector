@@ -12,7 +12,7 @@ from aqt import gui_hooks
 from aqt.webview import AnkiWebViewKind
 
 LOCAL_DIR = os.path.dirname(__file__)
-from leechdetector.leech_detector import LeechDetector
+from .leech_detector import LeechDetector
 
 from string import Template
 

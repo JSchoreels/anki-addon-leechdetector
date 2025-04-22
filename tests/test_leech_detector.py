@@ -4,8 +4,8 @@ import unittest
 
 from anki.collection import Collection
 
+from leechdetector import LeechDetector
 from leechdetector.AnkiValueParser import time_to_date, interval_to_duration_display, is_failed
-from leechdetector.leech_detector import LeechDetector
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -46,7 +46,7 @@ class LeechDetectorTest(unittest.TestCase):
                      []]
         )
 
-    def display_stats(self):
+    def test_display_stats(self):
         lapse_infos = []
         for card_id in self.collection.find_cards('"deck:Japan::1. Vocabulary" -is:new prop:lapses>0'):
             lapse_infos.append(self.leechdetector.get_lapse_infos(card_id))
