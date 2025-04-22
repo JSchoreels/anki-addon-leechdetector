@@ -6,9 +6,11 @@ import json
 
 class LapseInfos:
 
-    def __init__(self, card_id : CardId, past_max_intervals : list[int], current_lapse_max_intervals : int, outperformance_factor : float = 1.25):
+    def __init__(self, card_id : CardId, past_max_intervals : list[int], current_lapse_max_intervals : int, date_first_review : int, review_count : int, outperformance_factor : float = 1.25):
         self.card_id = card_id
         self.past_max_intervals = past_max_intervals
+        self.date_first_review = date_first_review
+        self.review_count = review_count
         self.current_lapse_max_intervals = current_lapse_max_intervals
         self.lapses_count = len(past_max_intervals)
         self.outperformance_factor = outperformance_factor
@@ -35,12 +37,14 @@ class LapseInfos:
     def median_max_interval(self):
         return median(self.past_max_intervals)
 
+    def days_by_reviews(self):
+        return self.date_first_review / self.review_count
 
     def __repr__(self):
         if self.lapses_count > 0:
-            return f'Card : {self.card_id} Past Lapses : ({self.lapses_count}) {self.past_max_intervals} (now:{self.current_lapse_max_intervals})  Drops:{self.drop_count()} BiggestDrop:{self.biggest_interval_drop()} Mean:{self.average_max_interval():.2f} Median:{self.median_max_interval()} FailedOutperforamnce:{self.failed_outperformance_count()} FailedOutperforamnceRatio:{self.failed_outperformance_ratio() * 100:.2f}'
+            return f'Card : {self.card_id} Days:{self.date_first_review} Reviews:{self.review_count}({self.date_first_review/self.review_count:.2f}d/r) Past Lapses : ({self.lapses_count}) {self.past_max_intervals} (now:{self.current_lapse_max_intervals})  Drops:{self.drop_count()} BiggestDrop:{self.biggest_interval_drop()} Mean:{self.average_max_interval():.2f} Median:{self.median_max_interval()} FailedOutperforamnce:{self.failed_outperformance_count()} FailedOutperforamnceRatio:{self.failed_outperformance_ratio() * 100:.2f}'
         else:
-            return f'Card : {self.card_id} No Lapse, Current Max Interval : {self.current_lapse_max_intervals}'
+            return f'Card : {self.card_id} Days:{self.date_first_review} Reviews:{self.review_count}({self.date_first_review/self.review_count:.2f}d/r) No Lapse, Current Max Interval : {self.current_lapse_max_intervals}'
 
     def to_dict(self):
         return {

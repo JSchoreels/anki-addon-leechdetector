@@ -49,7 +49,7 @@ class LeechDetectorTest(unittest.TestCase):
     def test_display_stats(self):
         lapse_infos = []
         for card_id in self.collection.find_cards('"deck:Japan::1. Vocabulary" -is:new prop:lapses>0'):
-            lapse_infos.append(self.leechdetector.get_lapse_infos(card_id, outperformance_factor=1))
+            lapse_infos.append(self.leechdetector.get_lapse_infos(card_id, outperformance_factor=0.75))
         total_card_count = len(self.collection.find_cards('"deck:Japan::1. Vocabulary" -is:new'))
         lapsed_card_count = len(lapse_infos)
         distribution_lapse_count = group_lapse_info_by_key(lapse_infos, lambda lapseInfo: lapseInfo.lapses_count)
@@ -74,19 +74,27 @@ class LeechDetectorTest(unittest.TestCase):
         print(f"Cards That had [1/3, 2.3] failed outperformance ratio lapse: {failed_outperformance_ratio[1]} ({failed_outperformance_ratio[1] / lapsed_card_count * 100:.2f}%)")
         print(f"Cards That had [0.0, 1/3] failed outperformance ratio lapse : {failed_outperformance_ratio[0]} ({failed_outperformance_ratio[0] / lapsed_card_count * 100:.2f}%)")
 
+        ## Failed Days/Reviews Counts Ratio
+        days_by_reviews = group_lapse_info_by_key(lapse_infos, lambda lapseInfo: int(lapseInfo.days_by_reviews() / 5), filter=lambda lapse_info: lapse_info.review_count > 20)
+        for i in range(max(days_by_reviews.keys())):
+            if i in days_by_reviews.keys():
+                print(f"Cards That have [{i*3:2d}, {i*3+2:2d}] days by reviews :: {days_by_reviews[i]} ({days_by_reviews[i] / lapsed_card_count * 100:.2f}%)")
+            else:
+                print(f"Cards That have [{i*3:2d}, {i*3+2:2d}] days by reviews :: 0")
 
         print(distribution_drops)
         print(distribution_lapse_count)
-        lapse_infos.sort(key=lambda lapseInfo: lapseInfo.failed_outperformance_ratio(), reverse=True)
-        [ print(lapse_info) for lapse_info in lapse_infos ]
+        lapse_infos.sort(key=lambda lapseInfo: lapseInfo.drop_count(), reverse=True)
+        [ print(lapse_info) for lapse_info in lapse_infos if lapse_info.review_count > 20]
 
-def group_lapse_info_by_key(lapseInfos, key_function):
+def group_lapse_info_by_key(lapseInfos, key_function, filter=lambda lapseInfo: True):
     distributionDrops = {}
     for lapseInfo in lapseInfos:
-        key = key_function(lapseInfo)
-        if key in distributionDrops:
-            distributionDrops[key] += 1
-        else:
-            distributionDrops[key] = 1
+        if filter(lapseInfo):
+            key = key_function(lapseInfo)
+            if key in distributionDrops:
+                distributionDrops[key] += 1
+            else:
+                distributionDrops[key] = 1
     return distributionDrops
 

@@ -42,7 +42,9 @@ class LeechDetector:
         if not review_log or len(review_log) == 0:
             return LapseInfos(card_id, [], 0)
         current_max_success_ivl = 0
-        current_day = time_to_days(review_log[0].time)
+        current_day = interval_to_days(review_log[0].time)
+        date_first_review = current_day
+        review_count = len(review_log)
 
         max_successful_interval_by_lapse = []
 
@@ -53,9 +55,11 @@ class LeechDetector:
                 elif current_max_success_ivl > 0 : # We don't really want a failed rep after a previous cycle to count as a cycle
                     max_successful_interval_by_lapse.append(current_max_success_ivl)
                     current_max_success_ivl = 0
-            current_day = interval_to_days(review.time)
+                current_day = interval_to_days(review.time)
 
-        return LapseInfos(card_id, max_successful_interval_by_lapse, current_max_success_ivl, outperformance_factor=outperformance_factor)
+        date_last_review = current_day
+
+        return LapseInfos(card_id, max_successful_interval_by_lapse, current_max_success_ivl, date_last_review - date_first_review, review_count, outperformance_factor=outperformance_factor)
 
 
 
