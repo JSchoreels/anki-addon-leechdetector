@@ -17,7 +17,7 @@ class LapseInfos:
         return sum([1 for i in range(1, self.lapses_count) if self.past_max_intervals[i - 1] > self.past_max_intervals[i]])
 
     def failed_outperformance_count(self):
-        return sum([1 for i in range(1, self.lapses_count) if not self.past_max_intervals[i - 1] < self.past_max_intervals[i] * self.outperformance_factor])
+        return sum([1 for i in range(1, self.lapses_count) if not self.past_max_intervals[i - 1] * self.outperformance_factor < self.past_max_intervals[i]])
 
     def failed_outperformance_ratio(self):
         if self.lapses_count <= 1:
