@@ -38,7 +38,7 @@ gui_hooks.webview_did_inject_style_into_page.append(
 )
 
 def handle_webview_did_receive_js_message(handled, message : str, context):
-    print(f"Received JS message. Handled : {handled}, Message : {message}, Context : {context}")
+    # print(f"Received JS message. Handled : {handled}, Message : {message}, Context : {context}")
     if "leechdetector:getcard:" in message:
         leechdetector = LeechDetector()
         card_id_received = message.split("leechdetector:getcard:")[1]
@@ -51,4 +51,33 @@ def handle_webview_did_receive_js_message(handled, message : str, context):
 
 gui_hooks.webview_did_receive_js_message.append(
     handle_webview_did_receive_js_message
+)
+
+def handle_browser_will_search(context : aqt.browser.SearchContext):
+    # print(f"handle_browser_will_search : {context}")
+    splitted_search = context.search.split(" ")
+    if len([term for term in splitted_search if term.startswith("leeches:")]) > 0:
+        leechdetector = LeechDetector()
+        search_filtered = " ".join([term for term in splitted_search if not term.startswith("leeches:")])
+        result = mw.col.find_cards(search_filtered)
+        if "leeches:all" in splitted_search:
+            context.ids = [ card_id for card_id in result if leechdetector.get_lapse_infos(card_id).is_leech()]
+        else:
+            context.ids = []
+            if "leeches:active" in splitted_search:
+                context.ids = context.ids + [ card_id for card_id in result if leechdetector.get_lapse_infos(card_id).is_active_leech()]
+            if "leeches:recovering" in splitted_search:
+                context.ids = context.ids + [ card_id for card_id in result if leechdetector.get_lapse_infos(card_id).is_recovering_leech()]
+            if "leeches:recovered" in splitted_search:
+                context.ids = context.ids + [ card_id for card_id in result if leechdetector.get_lapse_infos(card_id).is_recovered_leech()]
+        return context
+
+def handle_browser_did_search(context : aqt.browser.SearchContext):
+    pass
+
+gui_hooks.browser_will_search.append(
+    handle_browser_will_search
+)
+gui_hooks.browser_did_search.append(
+    handle_browser_did_search
 )

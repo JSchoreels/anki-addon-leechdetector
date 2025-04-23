@@ -104,4 +104,4 @@ function get_cardid(){
     }
 }
 
-setTimeout(add_lapse_stats, 200);
+setTimeout(add_lapse_stats, 300);
