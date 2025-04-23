@@ -48,7 +48,7 @@ class LapseInfos:
     def is_leech(self, drop_count_threshold=1, failed_improvement_ratio=0.33):
         is_leech = True
         is_leech = is_leech and self.performance_drop_count() > drop_count_threshold
-        is_leech = is_leech and self.failed_improvement_ratio() > failed_improvement_ratio
+        is_leech = is_leech and self.performance_drop_ratio() > failed_improvement_ratio
         return is_leech
 
     def is_recovering_leech(self):
