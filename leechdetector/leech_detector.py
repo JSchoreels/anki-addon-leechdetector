@@ -31,7 +31,7 @@ class LeechDetector:
         # Note : The last review is not considered as a successful review
         return max_successful_interval
 
-    def get_lapse_infos(self, card_id: CardId, outperformance_factor=1.25) -> LapseInfos:
+    def get_lapse_infos(self, card_id: CardId, improvement_factor=1.25) -> LapseInfos:
         """
         For each lapse (when a card failed that day), the max successful interval is computed.
         :param card_id:
@@ -59,7 +59,7 @@ class LeechDetector:
 
         date_last_review = current_day
 
-        return LapseInfos(card_id, max_successful_interval_by_lapse, current_max_success_ivl, date_last_review - date_first_review, review_count, outperformance_factor=outperformance_factor)
+        return LapseInfos(card_id, max_successful_interval_by_lapse, current_max_success_ivl, date_last_review - date_first_review, review_count, improvement_factor=improvement_factor)
 
 
 

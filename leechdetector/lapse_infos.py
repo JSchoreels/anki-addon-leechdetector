@@ -6,28 +6,33 @@ import json
 
 class LapseInfos:
 
-    def __init__(self, card_id : CardId, past_max_intervals : list[int], current_lapse_max_intervals : int, date_first_review : int, review_count : int, outperformance_factor : float = 1.25):
+    def __init__(self, card_id : CardId, past_max_intervals : list[int], current_lapse_max_intervals : int = 0, date_first_review : int = 0, review_count : int = 0, improvement_factor : float = 1.25, drop_factor : float = 0.75):
         self.card_id = card_id
         self.past_max_intervals = past_max_intervals
         self.date_first_review = date_first_review
         self.review_count = review_count
         self.current_lapse_max_intervals = current_lapse_max_intervals
         self.lapses_count = len(past_max_intervals)
-        self.outperformance_factor = outperformance_factor
+        self.improvement_factor = improvement_factor
 
-    def drop_count(self):
+    def performance_drop_count(self):
         return sum([1 for i in range(1, self.lapses_count) if self.past_max_intervals[i - 1] > self.past_max_intervals[i]])
 
-    def failed_outperformance_count(self):
-        return sum([1 for i in range(1, self.lapses_count) if not self.past_max_intervals[i - 1] * self.outperformance_factor < self.past_max_intervals[i]])
-
-    def failed_outperformance_ratio(self):
+    def performance_drop_ratio(self):
         if self.lapses_count <= 1:
             return 0
-        return self.failed_outperformance_count() / (self.lapses_count - 1)
+        return self.performance_drop_count() / (self.lapses_count - 1)
+
+    def failed_improvement_count(self):
+        return sum([1 for i in range(1, self.lapses_count) if not self.past_max_intervals[i - 1] * self.improvement_factor <= self.past_max_intervals[i]])
+
+    def failed_improvement_ratio(self):
+        if self.lapses_count <= 1:
+            return 0
+        return self.failed_improvement_count() / (self.lapses_count - 1)
 
     def biggest_interval_drop(self):
-        if self.drop_count() == 0:
+        if self.performance_drop_count() == 0:
             return 0
         return max([self.past_max_intervals[i-1] - self.past_max_intervals[i] for i in range(1, self.lapses_count) if self.past_max_intervals[i-1] - self.past_max_intervals[i] > 0])
 
@@ -40,11 +45,39 @@ class LapseInfos:
     def days_by_reviews(self):
         return self.date_first_review / self.review_count
 
+    def is_leech(self, drop_count_threshold=1, failed_improvement_ratio=0.33):
+        is_leech = True
+        is_leech = is_leech and self.performance_drop_count() > drop_count_threshold
+        is_leech = is_leech and self.failed_improvement_ratio() > failed_improvement_ratio
+        return is_leech
+
+    def is_recovering_leech(self):
+        return self.is_leech() and self.days_above_past_max_intervals() > 0
+
+    def is_recovered_leech(self):
+        return self.is_leech() and self.days_above_past_max_intervals() > max(self.past_max_intervals)
+
+    def days_above_past_max_intervals(self):
+        return self.current_lapse_max_intervals - max(self.past_max_intervals)
+
+    def is_active_leech(self):
+        return self.is_leech() and not self.is_recovering_leech()
+
+    def leech_status(self):
+        if self.is_active_leech():
+            return "Leech"
+        elif self.is_recovered_leech():
+            return f"Recovered"
+        elif self.is_recovering_leech():
+            return f"Recovering"
+        else:
+            return "Healthy"
+
     def __repr__(self):
         if self.lapses_count > 0:
-            return f'Card : {self.card_id} Days:{self.date_first_review} Reviews:{self.review_count}({self.date_first_review/self.review_count:.2f}d/r) Past Lapses : ({self.lapses_count}) {self.past_max_intervals} (now:{self.current_lapse_max_intervals})  Drops:{self.drop_count()} BiggestDrop:{self.biggest_interval_drop()} Mean:{self.average_max_interval():.2f} Median:{self.median_max_interval()} FailedOutperforamnce:{self.failed_outperformance_count()} FailedOutperforamnceRatio:{self.failed_outperformance_ratio() * 100:.2f}'
+            return f'Card : {self.card_id} Days:{self.date_first_review:3d} Reviews:{self.review_count}({self.date_first_review/self.review_count:3.2f}d/r Lapses:{self.lapses_count}) PastLapses:{self.past_max_intervals} (now:{self.current_lapse_max_intervals}({self.days_above_past_max_intervals():+d}))  Drops:{self.performance_drop_count()} FailedImprovement:{self.failed_improvement_count()} FailedImprovementRatio:{self.failed_improvement_ratio() * 100:.2f}'
         else:
-            return f'Card : {self.card_id} Days:{self.date_first_review} Reviews:{self.review_count}({self.date_first_review/self.review_count:.2f}d/r) No Lapse, Current Max Interval : {self.current_lapse_max_intervals}'
+            return f'Card : {self.card_id} Days:{self.date_first_review:3d} Reviews:{self.review_count}({self.date_first_review/self.review_count:3.2f}d/r) No Lapse, Current Max Interval : {self.current_lapse_max_intervals}'
 
     def to_dict(self):
         return {
@@ -57,7 +90,9 @@ class LapseInfos:
         base = self.to_dict()
         base.update({
             "biggest_interval_drop" : self.biggest_interval_drop(),
-            "failed_outperformance_ratio" : self.failed_outperformance_ratio()
+            "failed_improvement_ratio" : self.failed_improvement_ratio(),
+            "leech_status" : self.leech_status(),
+            "performance_drop_count": self.performance_drop_count(),
+            "performance_drop_ratio":self.performance_drop_ratio()
         })
-        print(base)
         return base

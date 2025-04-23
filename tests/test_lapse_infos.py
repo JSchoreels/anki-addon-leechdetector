@@ -30,19 +30,19 @@ class TestLapseInfos(unittest.TestCase):
 
     def test_drop_count(self):
         self.assertListEqual(
-            list1=[lapse_info.drop_count() for lapse_info in self.lapse_infos],
+            list1=[lapse_info.performance_drop_count() for lapse_info in self.lapse_infos],
             list2=[0, 0, 0, 1, 4, 3, 3, 3, 4, 3, 0]
         )
 
-    def test_failed_outperformance_count(self):
+    def test_failed_improvement_count(self):
         self.assertListEqual(
-            list1=[lapse_info.failed_outperformance_count() for lapse_info in self.lapse_infos],
+            list1=[lapse_info.failed_improvement_count() for lapse_info in self.lapse_infos],
             list2=[1, 0, 0, 3, 4, 4, 4, 3, 4, 5, 0]
         )
 
-    def test_failed_outperformance_ratio(self):
+    def test_failed_improvement_ratio(self):
         self.assertListEqual(
-            list1=[int(100 * lapse_info.failed_outperformance_ratio()) for lapse_info in self.lapse_infos],
+            list1=[int(100 * lapse_info.failed_improvement_ratio()) for lapse_info in self.lapse_infos],
             list2=[50, 0, 0, 60, 57, 50, 57, 75, 57, 71, 0]
         )
 
@@ -56,5 +56,5 @@ class TestLapseInfos(unittest.TestCase):
         for lapse_info in self.lapse_infos:
             self.assertListEqual(
                 list1=list(lapse_info.to_dict_enriched().keys()),
-                list2=['card_id', 'past_max_intervals', 'current_lapse_max_intervals', 'biggest_interval_drop', 'failed_outperformance_ratio']
+                list2=['card_id', 'past_max_intervals', 'current_lapse_max_intervals', 'biggest_interval_drop', 'failed_improvement_ratio']
             )

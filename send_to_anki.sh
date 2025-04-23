@@ -1,0 +1,1 @@
+cp -r leechdetector/* ~/Library/Application\ Support/Anki2/addons21/1406469667/.

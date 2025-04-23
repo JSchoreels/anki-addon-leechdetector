@@ -1,3 +1,7 @@
+const healthy_color = "#22c55e";
+const warning_color = "#fdba74";
+const alert_color = "#f87171";
+
 function add_lapse_stats() {
     const rows = document.querySelectorAll('tr');
 
@@ -29,20 +33,66 @@ function add_lapse_stats() {
     }
 }
 
+function resetStyle(cells){
+        Object.values(cells).forEach(cell => {
+            cell.style.color = ""
+            cell.style.fontWeight = ""
+        });
+}
+
+function updateCellsContent(cells, lapseInfos){
+        cells.leechStatusCell.textContent = lapseInfos.leech_status
+        cells.pastMaxIntervalsCell.textContent = JSON.stringify(lapseInfos.past_max_intervals)
+        cells.currentLapseMaxIntervalsCell.textContent = lapseInfos.current_lapse_max_intervals
+        cells.performanceDropCountCell.textContent = lapseInfos.performance_drop_count
+        cells.performanceDropRatioCell.textContent = (lapseInfos.performance_drop_ratio * 100).toFixed(2) + "%"
+}
+
+function colorCells(cells, lapseInfos){
+
+        cells.leechStatusCell.style.fontWeight = "bold"
+        cells.leechStatusCell.style.color = {
+            Healthy: healthy_color,
+            Recovered: healthy_color,
+            Recovering: warning_color,
+            Leech: alert_color
+        }[lapseInfos.leech_status];
+
+        const maxPastInterval = Math.max(...lapseInfos.past_max_intervals);
+
+        if (lapseInfos.current_lapse_max_intervals > maxPastInterval * 2) {
+            cells.currentLapseMaxIntervalsCell.style.color = healthy_color
+        } else if (lapseInfos.leech_status !== "Healthy") {
+            cells.currentLapseMaxIntervalsCell.style.color = warning_color;
+        }
+
+        if(lapseInfos.performance_drop_count > 1 && lapseInfos.performance_drop_ratio > 0.33){
+            cells.performanceDropCountCell.style.color = alert_color
+            cells.performanceDropCountCell.style.fontWeight = "bold"
+            cells.performanceDropRatioCell.style.color = alert_color
+            cells.performanceDropRatioCell.style.fontWeight = "bold"
+        } else if (lapseInfos.performance_drop_count > 1) {
+            cells.performanceDropCountCell.style.color = warning_color
+        } else if (lapseInfos.performance_drop_ratio > 0.33) {
+            cells.performanceDropRatioCell.style.color = warning_color
+        }
+}
+
 function request_lapseinfo(card_id) {
     pycmd("leechdetector:getcard:" + card_id, (lapseInfos) => {
-        // console.log("Received : " + lapseInfos)
-        const pastMaxIntervalsCell = document.querySelector('#past_max_intervals');
-        const currentLapseMaxIntervalsCell = document.querySelector('#current_lapse_max_intervals');
-        const biggestIntervalDropCell = document.querySelector('#biggest_interval_drop');
-        const failedOutperformanceRatio = document.querySelector('#failed_outperformance_ratio');
+        const extraStatsFields = {
+            leechStatusCell: document.querySelector('#leech_status'),
+            pastMaxIntervalsCell: document.querySelector('#past_max_intervals'),
+            currentLapseMaxIntervalsCell: document.querySelector('#current_lapse_max_intervals'),
+            performanceDropCountCell: document.querySelector('#performance_drop_count'),
+            performanceDropRatioCell: document.querySelector('#performance_drop_ratio'),
+        }
 
         lapseInfos = JSON.parse(lapseInfos)
 
-        pastMaxIntervalsCell.textContent = JSON.stringify(lapseInfos.past_max_intervals)
-        currentLapseMaxIntervalsCell.textContent = lapseInfos.current_lapse_max_intervals
-        biggestIntervalDropCell.textContent = lapseInfos.biggest_interval_drop
-        failedOutperformanceRatio.textContent = lapseInfos.failed_outperformance_ratio
+        resetStyle(extraStatsFields)
+        updateCellsContent(extraStatsFields, lapseInfos)
+        colorCells(extraStatsFields, lapseInfos)
     })
 }
 
