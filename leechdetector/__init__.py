@@ -58,18 +58,22 @@ def handle_browser_will_search(context : aqt.browser.SearchContext):
     splitted_search = context.search.split(" ")
     if len([term for term in splitted_search if term.startswith("leeches:")]) > 0:
         leechdetector = LeechDetector()
-        search_filtered = " ".join([term for term in splitted_search if not term.startswith("leeches:")])
-        result = mw.col.find_cards(search_filtered)
+        if context.ids is None:
+            search_filtered = " ".join([term for term in splitted_search if not term.startswith("leeches:")])
+            card_ids = mw.col.find_cards(search_filtered, context.order, context.reverse)
+        else:
+            card_ids = context.ids
         if "leeches:all" in splitted_search:
-            context.ids = [ card_id for card_id in result if leechdetector.get_lapse_infos(card_id).is_leech()]
+            context.ids = [ card_id for card_id in card_ids if leechdetector.get_lapse_infos(card_id).is_leech()]
         else:
             context.ids = []
             if "leeches:active" in splitted_search:
-                context.ids = context.ids + [ card_id for card_id in result if leechdetector.get_lapse_infos(card_id).is_active_leech()]
+                context.ids = context.ids + [ card_id for card_id in card_ids if leechdetector.get_lapse_infos(card_id).is_active_leech()]
             if "leeches:recovering" in splitted_search:
-                context.ids = context.ids + [ card_id for card_id in result if leechdetector.get_lapse_infos(card_id).is_recovering_leech()]
+                context.ids = context.ids + [ card_id for card_id in card_ids if leechdetector.get_lapse_infos(card_id).is_recovering_leech()]
             if "leeches:recovered" in splitted_search:
-                context.ids = context.ids + [ card_id for card_id in result if leechdetector.get_lapse_infos(card_id).is_recovered_leech()]
+                context.ids = context.ids + [ card_id for card_id in card_ids if leechdetector.get_lapse_infos(card_id).is_recovered_leech()]
+        print(f"handle_browser_will_search : {context}")
         return context
 
 def handle_browser_did_search(context : aqt.browser.SearchContext):

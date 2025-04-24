@@ -28,3 +28,6 @@ Those flags combines as "OR", meaning the result will be all results merged.
 
 - You can add the issues encountered or your feedback on this project : https://github.com/JSchoreels/anki-addon-leechdetector/issues
 - If you don't have a github account, or want to discuss privately about some behaviours, you can contact me on Anki's Discord : @soundjona
+
+## Release Notes :
+- 2025/04/24 : Fix Sorting in Browse view when doing `leeches:*` searches
