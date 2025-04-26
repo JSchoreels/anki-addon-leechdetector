@@ -1,5 +1,4 @@
 rm leechdetector.zip
-cd leechdetector
-zip -r ../leechdetector.zip * -x "__pycache__/*"
-cd ..
+zip -r leechdetector.zip leechdetector/* -x "__pycache__/*"
 zip leechdetector.zip manifest.json
+zip leechdetector.zip __init__.py

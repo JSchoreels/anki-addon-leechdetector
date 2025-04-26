@@ -22,6 +22,17 @@ Added new field to see the Leech status of a card and the key metrics allowing t
 
 Those flags combines as "OR", meaning the result will be all results merged.
 
+You can also specify custom leech detection threshold, those are valid searches :
+- `leeches:active[drop_count=5,drop_ratio=.5]`
+- `leeches:active[drop_count=5]`
+- `leeches:active[drop_ratio=.5]`
+- `leeches:recovered[drop_count=1,drop_ratio=.5] leeches:active[drop_count=5,drop_ratio=.5]`
+
+Note : All custom filters are under the hood replaced by `*`, and then only the search is filtered. So,
+`(A leeches:active) OR (B leeches:recovered)` will be equal to `(A *) OR (B *) AND (leeches:active OR leeches:recovered`.
+If you want proper evaluation of such queries, you should populate a card field with the leech status and filter on it
+like you would do with any normal card fields.
+
 ## Contact
 
 ### Issues / Feedback
