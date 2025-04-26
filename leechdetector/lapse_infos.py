@@ -14,6 +14,11 @@ class LapseInfos:
         self.current_lapse_max_intervals = current_lapse_max_intervals
         self.lapses_count = len(past_max_intervals)
         self.improvement_factor = improvement_factor
+        self.configure_leech_detection()
+
+    def configure_leech_detection(self, drop_count=1, drop_ratio=0.33):
+        self.drop_count = drop_count
+        self.drop_ratio = drop_ratio
 
     def performance_drop_count(self):
         return sum([1 for i in range(1, self.lapses_count) if self.past_max_intervals[i - 1] > self.past_max_intervals[i]])
@@ -45,10 +50,10 @@ class LapseInfos:
     def days_by_reviews(self):
         return self.date_first_review / self.review_count
 
-    def is_leech(self, drop_count_threshold=1, failed_improvement_ratio=0.33):
+    def is_leech(self):
         is_leech = True
-        is_leech = is_leech and self.performance_drop_count() > drop_count_threshold
-        is_leech = is_leech and self.performance_drop_ratio() > failed_improvement_ratio
+        is_leech = is_leech and self.performance_drop_count() > self.drop_count
+        is_leech = is_leech and self.performance_drop_ratio() > self.drop_ratio
         return is_leech
 
     def is_recovering_leech(self):
