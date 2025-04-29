@@ -51,4 +51,5 @@ Note :
 
 ## Release Notes :
 
-- 2025/04/24 : Fix Sorting in Browse view when doing `leeches:*` searches
+- 2025/04/29 : Add dynamic custom filters
+- 2025/04/24 : Fix Sorting in Browse view when doing `leeches:*` searches like `leeches:recovered[drop_count=1,drop_ratio=.5] leeches:active[drop_count=5,drop_ratio=.5]`
