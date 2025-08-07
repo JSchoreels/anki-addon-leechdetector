@@ -57,10 +57,10 @@ class LapseInfos:
         return is_leech
 
     def is_recovering_leech(self):
-        return self.is_leech() and self.days_above_past_max_intervals() > max(self.past_max_intervals) and not self.is_recovered_leech()
+        return self.is_leech() and self.current_lapse_max_intervals > max(self.past_max_intervals) and not self.is_recovered_leech()
 
     def is_recovered_leech(self):
-        return self.is_leech() and self.days_above_past_max_intervals() > max(self.past_max_intervals) * 2
+        return self.is_leech() and self.current_lapse_max_intervals > max(self.past_max_intervals) * 2
 
     def days_above_past_max_intervals(self):
         return self.current_lapse_max_intervals - max(self.past_max_intervals)
