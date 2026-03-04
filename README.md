@@ -40,6 +40,14 @@ Note :
 - If you specify more than once the same type of leeches filter, the last one will have priority. Example
   `leeches:active[drop_count=1] leeches:active[drop_count=2]` the `drop_count=2` will replace the `drop_count=1`
 
+### Stats / Plugins Search
+
+`leeches:*` filters are also supported in Stats screens and plugins doing card searches (for example Search Stats Extended).
+
+- This compatibility patch is enabled by default.
+- You can disable it in the addon config in Anki with `"enable_stats_graphs_patch": false`.
+- Restart after this change.
+
 ## Contact
 
 ### Issues / Feedback
@@ -51,5 +59,6 @@ Note :
 
 ## Release Notes :
 
+- 2026/03/04 : Support `leeches:*` in Stats / plugins searches, add fallback safety and config toggle (`enable_stats_graphs_patch`)
 - 2025/04/29 : Add dynamic custom filters
 - 2025/04/24 : Fix Sorting in Browse view when doing `leeches:*` searches like `leeches:recovered[drop_count=1,drop_ratio=.5] leeches:active[drop_count=5,drop_ratio=.5]`

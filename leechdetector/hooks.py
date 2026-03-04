@@ -70,8 +70,12 @@ def check_cross_addon_compatibility(context):
 
 
 def filter_cards(card_ids, leech_filters):
-    leechdetector = LeechDetector()
+    return filter_cards_with_detector(card_ids, leech_filters, LeechDetector())
+
+
+def filter_cards_with_detector(card_ids, leech_filters, leechdetector):
     filtered_ids = []
+    seen_ids = set()
     if len(leech_filters) > 0:
         for card_id in card_ids:
             for leech_type, leech_args in leech_filters.items():
@@ -83,7 +87,8 @@ def filter_cards(card_ids, leech_filters):
                     "recovering": lapse_infos.is_recovering_leech,
                     "recovered": lapse_infos.is_recovered_leech
                 }
-                if leech_type_to_predicate[leech_type]():
+                if leech_type_to_predicate[leech_type]() and card_id not in seen_ids:
+                    seen_ids.add(card_id)
                     filtered_ids.append(card_id)
     else:
         filtered_ids = card_ids

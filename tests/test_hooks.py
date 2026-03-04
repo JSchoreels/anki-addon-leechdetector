@@ -3,7 +3,9 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import leechdetector.hooks as hooks
+import leechdetector.patches as patches
 from leechdetector.lapse_infos import LapseInfos
+from anki.stats_pb2 import GraphsRequest
 
 
 class FakeLapseInfos:
@@ -81,6 +83,19 @@ class TestHooks(unittest.TestCase):
         self.assertEqual(card_2.configure_calls, [{"drop_count": 3}, {"drop_ratio": 0.5}])
         self.assertEqual(card_3.configure_calls, [{"drop_count": 3}, {"drop_ratio": 0.5}])
 
+    def test_filter_cards_deduplicates_when_same_card_matches_multiple_filters(self):
+        card_1 = FakeLapseInfos(1, active=True, recovering=True, leech=True)
+        card_2 = FakeLapseInfos(2, active=False, recovering=True, leech=True)
+        fake_detector = FakeLeechDetector({1: card_1, 2: card_2})
+
+        with patch("leechdetector.hooks.LeechDetector", return_value=fake_detector):
+            filtered = hooks.filter_cards(
+                [1, 2],
+                {"active": {"drop_count": 1}, "recovering": {"drop_ratio": 0.5}},
+            )
+
+        self.assertEqual(filtered, [1, 2])
+
     def test_filter_cards_raises_for_unknown_arg_name(self):
         class RealDetector:
             def get_lapse_infos(self, card_id):
@@ -89,6 +104,179 @@ class TestHooks(unittest.TestCase):
         with patch("leechdetector.hooks.LeechDetector", return_value=RealDetector()):
             with self.assertRaises(TypeError):
                 hooks.filter_cards([1], {"active": {"dropcount": 2}})
+
+    def test_find_cards_with_custom_leech_filters_without_filters(self):
+        find_cards_mock = Mock(return_value=[10, 20])
+
+        with patch("leechdetector.patches.filter_cards_with_detector") as filter_mock:
+            out = patches.find_cards_with_custom_leech_filters(
+                query="deck:test is:review",
+                order=False,
+                reverse=False,
+                find_cards_func=find_cards_mock,
+            )
+
+        self.assertEqual(out, [10, 20])
+        find_cards_mock.assert_called_once_with("deck:test is:review", False, False)
+        filter_mock.assert_not_called()
+
+    def test_find_cards_with_custom_leech_filters_with_filters(self):
+        find_cards_mock = Mock(return_value=[10, 20, 30])
+        fake_detector = object()
+
+        with patch("leechdetector.patches.filter_cards_with_detector", return_value=[20]) as filter_mock:
+            out = patches.find_cards_with_custom_leech_filters(
+                query="deck:test leeches:all leeches:active[drop_count=2]",
+                order="noteFld",
+                reverse=True,
+                find_cards_func=find_cards_mock,
+                leechdetector_factory=lambda: fake_detector,
+            )
+
+        self.assertEqual(out, [20])
+        find_cards_mock.assert_called_once_with("deck:test * *", "noteFld", True)
+        filter_mock.assert_called_once_with(
+            [10, 20, 30],
+            {"all": {}, "active": {"drop_count": 2}},
+            fake_detector,
+        )
+
+    def test_find_cards_with_custom_leech_filters_accepts_bytes_query(self):
+        find_cards_mock = Mock(return_value=[10, 20, 30])
+        fake_detector = object()
+
+        with patch("leechdetector.patches.filter_cards_with_detector", return_value=[20]) as filter_mock:
+            out = patches.find_cards_with_custom_leech_filters(
+                query=b"deck:test leeches:all",
+                order=False,
+                reverse=False,
+                find_cards_func=find_cards_mock,
+                leechdetector_factory=lambda: fake_detector,
+            )
+
+        self.assertEqual(out, [20])
+        find_cards_mock.assert_called_once_with("deck:test *", False, False)
+        filter_mock.assert_called_once_with([10, 20, 30], {"all": {}}, fake_detector)
+
+    def test_patch_find_cards_for_leech_filters_is_idempotent(self):
+        class FakeCollection:
+            def find_cards(self, query, order=False, reverse=False):
+                return [1, 2, 3]
+
+        original_find_cards = FakeCollection.find_cards
+
+        with patch("leechdetector.patches.find_cards_with_custom_leech_filters", return_value=[2]) as helper:
+            patches.patch_find_cards_for_leech_filters(FakeCollection)
+            first_wrapped = FakeCollection.find_cards
+            patches.patch_find_cards_for_leech_filters(FakeCollection)
+
+            self.assertIs(FakeCollection.find_cards, first_wrapped)
+            self.assertIs(FakeCollection._leechdetector_original_find_cards, original_find_cards)
+
+            collection = FakeCollection()
+            out = collection.find_cards("leeches:all", "noteFld", True)
+
+        self.assertEqual(out, [2])
+        helper.assert_called_once()
+
+    def test_patch_graphs_raw_for_leech_filters_rewrites_leech_query_to_cids(self):
+        class FakeBackend:
+            def graphs_raw(self, message):
+                req = GraphsRequest()
+                req.ParseFromString(message)
+                return req.search.encode("utf-8")
+
+        class FakeCollection:
+            def find_cards(self, query):
+                self.query = query
+                return [10, 20, 30]
+
+        fake_col = FakeCollection()
+
+        patches.patch_graphs_raw_for_leech_filters(FakeBackend, col_provider=lambda: fake_col)
+
+        request = GraphsRequest(search="deck:test leeches:all", days=30)
+        out = FakeBackend().graphs_raw(request.SerializeToString())
+
+        self.assertEqual(fake_col.query, "deck:test leeches:all")
+        self.assertEqual(out.decode("utf-8"), "cid:10,20,30")
+
+    def test_patch_graphs_raw_for_leech_filters_sets_empty_cid_query(self):
+        class FakeBackend:
+            def graphs_raw(self, message):
+                req = GraphsRequest()
+                req.ParseFromString(message)
+                return req.search.encode("utf-8")
+
+        class FakeCollection:
+            def find_cards(self, query):
+                self.query = query
+                return []
+
+        fake_col = FakeCollection()
+
+        patches.patch_graphs_raw_for_leech_filters(FakeBackend, col_provider=lambda: fake_col)
+
+        request = GraphsRequest(search="leeches:all", days=30)
+        out = FakeBackend().graphs_raw(request.SerializeToString())
+
+        self.assertEqual(fake_col.query, "leeches:all")
+        self.assertEqual(out.decode("utf-8"), "cid:0")
+
+    def test_patch_graphs_raw_for_leech_filters_keeps_non_leech_query(self):
+        class FakeBackend:
+            def graphs_raw(self, message):
+                req = GraphsRequest()
+                req.ParseFromString(message)
+                return req.search.encode("utf-8")
+
+        class FakeCollection:
+            def find_cards(self, query):
+                raise AssertionError("find_cards should not be called for non-leech queries")
+
+        patches.patch_graphs_raw_for_leech_filters(FakeBackend, col_provider=lambda: FakeCollection())
+
+        request = GraphsRequest(search="deck:test is:review", days=30)
+        out = FakeBackend().graphs_raw(request.SerializeToString())
+
+        self.assertEqual(out.decode("utf-8"), "deck:test is:review")
+
+    def test_patch_graphs_raw_for_leech_filters_is_idempotent(self):
+        class FakeBackend:
+            def graphs_raw(self, message):
+                return message
+
+        original_graphs_raw = FakeBackend.graphs_raw
+        patches.patch_graphs_raw_for_leech_filters(FakeBackend, col_provider=lambda: None)
+        first_wrapped = FakeBackend.graphs_raw
+        patches.patch_graphs_raw_for_leech_filters(FakeBackend, col_provider=lambda: None)
+
+        self.assertIs(FakeBackend.graphs_raw, first_wrapped)
+        self.assertIs(FakeBackend._leechdetector_original_graphs_raw, original_graphs_raw)
+
+    def test_patch_graphs_raw_for_leech_filters_falls_back_on_error(self):
+        class FakeBackend:
+            def graphs_raw(self, message):
+                req = GraphsRequest()
+                req.ParseFromString(message)
+                return f"orig:{req.search}".encode("utf-8")
+
+        patches.patch_graphs_raw_for_leech_filters(
+            FakeBackend,
+            col_provider=lambda: (_ for _ in ()).throw(RuntimeError("boom")),
+        )
+
+        request = GraphsRequest(search="leeches:all", days=30)
+        out = FakeBackend().graphs_raw(request.SerializeToString())
+        self.assertEqual(out.decode("utf-8"), "orig:leeches:all")
+
+    def test_is_stats_graphs_patch_enabled_defaults_to_true(self):
+        self.assertTrue(patches.is_stats_graphs_patch_enabled({}))
+        self.assertTrue(patches.is_stats_graphs_patch_enabled(None))
+
+    def test_is_stats_graphs_patch_enabled_reads_config_flag(self):
+        self.assertFalse(patches.is_stats_graphs_patch_enabled({"enable_stats_graphs_patch": False}))
+        self.assertTrue(patches.is_stats_graphs_patch_enabled({"enable_stats_graphs_patch": True}))
 
     def test_handle_browser_will_search_filters_when_ids_absent(self):
         class DummyOrder:
