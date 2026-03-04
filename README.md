@@ -49,6 +49,17 @@ Note :
 - You can disable it in the addon config in Anki with `"enable_stats_graphs_patch": false`.
 - Restart after this change.
 
+### Tools Summary Window
+
+From `Tools`, you can open `Leech Detector Summary` to quickly see:
+
+- Total leeches
+- Active / Recovering / Recovered counts
+- Per-deck split
+- Double-click any deck table cell to open Browser directly on the corresponding search
+
+<img src="https://github.com/JSchoreels/anki-addon-leechdetector/blob/main/images/tools_summary_view.jpg?raw=true" alt="Tools Summary Window, Leech Counts by Deck and Status" width="500" />
+
 ## Contact
 
 ### Issues / Feedback
@@ -65,6 +76,7 @@ Note :
 - Support `leeches:*` in Stats / plugins searches
 - Add fallback safety and config toggle (`enable_stats_graphs_patch`)
 - Add `leeches:healthy`
+- Add `Tools > Leech Detector Summary` window (with by-deck breakdown)
 
 ### 2025/04/29
 

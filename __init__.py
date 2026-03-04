@@ -6,6 +6,7 @@ from .leechdetector.hooks import (
     handle_browser_will_search,
     handle_browser_did_search,
 )
+from .leechdetector.dashboard import add_tools_menu_entry
 from .leechdetector.patches import (
     patch_find_cards_for_leech_filters,
     patch_graphs_raw_for_leech_filters,
@@ -17,6 +18,9 @@ gui_hooks.browser_will_search.append(
 )
 gui_hooks.browser_did_search.append(
     handle_browser_did_search
+)
+gui_hooks.main_window_did_init.append(
+    add_tools_menu_entry
 )
 
 patch_find_cards_for_leech_filters(Collection)
