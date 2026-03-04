@@ -43,7 +43,7 @@ function resetStyle(cells){
 function updateCellsContent(cells, lapseInfos){
         cells.leechStatusCell.textContent = lapseInfos.leech_status
         cells.pastMaxIntervalsCell.textContent = JSON.stringify(lapseInfos.past_max_intervals)
-        cells.currentLapseMaxIntervalsCell.textContent = lapseInfos.current_lapse_max_intervals
+        cells.currentLapseMaxIntervalsCell.textContent = lapseInfos.current_lapse_max_performance
         cells.performanceDropCountCell.textContent = lapseInfos.performance_drop_count
         cells.performanceDropRatioCell.textContent = (lapseInfos.performance_drop_ratio * 100).toFixed(2) + "%"
 }
@@ -60,7 +60,7 @@ function colorCells(cells, lapseInfos){
 
         const maxPastInterval = Math.max(...lapseInfos.past_max_intervals);
 
-        if (lapseInfos.current_lapse_max_intervals > maxPastInterval * 2) {
+        if (lapseInfos.current_lapse_max_performance > maxPastInterval * 2) {
             cells.currentLapseMaxIntervalsCell.style.color = healthy_color
         } else if (lapseInfos.leech_status !== "Healthy") {
             cells.currentLapseMaxIntervalsCell.style.color = warning_color;
@@ -83,7 +83,7 @@ function request_lapseinfo(card_id) {
         const extraStatsFields = {
             leechStatusCell: document.querySelector('#leech_status'),
             pastMaxIntervalsCell: document.querySelector('#past_max_intervals'),
-            currentLapseMaxIntervalsCell: document.querySelector('#current_lapse_max_intervals'),
+            currentLapseMaxIntervalsCell: document.querySelector('#current_lapse_max_performance'),
             performanceDropCountCell: document.querySelector('#performance_drop_count'),
             performanceDropRatioCell: document.querySelector('#performance_drop_ratio'),
         }
