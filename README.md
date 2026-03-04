@@ -20,6 +20,7 @@ Added new field to see the Leech status of a card and the key metrics allowing t
     - `leeches:active`
     - `leeches:recovering`
     - `leeches:recovered`
+    - `leeches:healthy`
 
 Those flags combines as "OR", meaning the result will be all results merged.
 
@@ -59,6 +60,16 @@ Note :
 
 ## Release Notes :
 
-- 2026/03/04 : Support `leeches:*` in Stats / plugins searches, add fallback safety and config toggle (`enable_stats_graphs_patch`)
-- 2025/04/29 : Add dynamic custom filters
-- 2025/04/24 : Fix Sorting in Browse view when doing `leeches:*` searches like `leeches:recovered[drop_count=1,drop_ratio=.5] leeches:active[drop_count=5,drop_ratio=.5]`
+### 2026/03/04
+
+- Support `leeches:*` in Stats / plugins searches
+- Add fallback safety and config toggle (`enable_stats_graphs_patch`)
+- Add `leeches:healthy`
+
+### 2025/04/29
+
+- Add dynamic custom filters
+
+### 2025/04/24
+
+- Fix sorting in Browse view when doing `leeches:*` searches like `leeches:recovered[drop_count=1,drop_ratio=.5] leeches:active[drop_count=5,drop_ratio=.5]`

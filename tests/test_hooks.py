@@ -96,6 +96,16 @@ class TestHooks(unittest.TestCase):
 
         self.assertEqual(filtered, [1, 2])
 
+    def test_filter_cards_healthy_filter(self):
+        leech_card = FakeLapseInfos(1, leech=True)
+        healthy_card = FakeLapseInfos(2, leech=False)
+        fake_detector = FakeLeechDetector({1: leech_card, 2: healthy_card})
+
+        with patch("leechdetector.hooks.LeechDetector", return_value=fake_detector):
+            filtered = hooks.filter_cards([1, 2], {"healthy": {}})
+
+        self.assertEqual(filtered, [2])
+
     def test_filter_cards_raises_for_unknown_arg_name(self):
         class RealDetector:
             def get_lapse_infos(self, card_id):

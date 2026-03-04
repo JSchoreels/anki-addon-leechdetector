@@ -85,7 +85,8 @@ def filter_cards_with_detector(card_ids, leech_filters, leechdetector):
                     "all": lapse_infos.is_leech,
                     "active": lapse_infos.is_active_leech,
                     "recovering": lapse_infos.is_recovering_leech,
-                    "recovered": lapse_infos.is_recovered_leech
+                    "recovered": lapse_infos.is_recovered_leech,
+                    "healthy": lambda: not lapse_infos.is_leech(),
                 }
                 if leech_type_to_predicate[leech_type]() and card_id not in seen_ids:
                     seen_ids.add(card_id)

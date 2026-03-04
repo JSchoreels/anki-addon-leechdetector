@@ -11,6 +11,7 @@ class CustomSearch(unittest.TestCase):
         "leeches:recovering(dropcount=2, dropratio=0.2)",
         "leeches:recovering(dropcount=2, dropratio=0.2)",
         "leeches:recovered(dropcount=2, dropratio=0.2)",
+        "leeches:healthy(dropcount=2, dropratio=0.2)",
         "leeches:recovered(dropcount=2, dropratio=0.2)",
         "leeches:active(dropcount=2, dropratio=0.200)",
         "leeches:active(dropcount=2, dropratio=0.2)",
@@ -21,7 +22,7 @@ class CustomSearch(unittest.TestCase):
     def test_regex_matching_leechestype(self):
         self.assertListEqual(
             list1=self.get_group_from_search(self.test_string, RE_CUSTOMSEARCH, RE_CUSTOMSEARCH_GROUP_TYPE),
-            list2=['all', 'active', 'recovering', 'recovering', 'recovered', 'recovered', 'active', 'active', 'active',
+            list2=['all', 'active', 'recovering', 'recovering', 'recovered', 'healthy', 'recovered', 'active', 'active', 'active',
                    'active']
         )
 
@@ -29,6 +30,7 @@ class CustomSearch(unittest.TestCase):
         self.assertListEqual(
             list1=self.get_group_from_search(self.test_string, RE_CUSTOMSEARCH, RE_CUSTOMSEARCH_GROUP_ARGS),
             list2=['dropcount=2, dropratio=0.2',
+                   'dropcount=2, dropratio=0.2',
                    'dropcount=2, dropratio=0.2',
                    'dropcount=2, dropratio=0.2',
                    'dropcount=2, dropratio=0.2',
