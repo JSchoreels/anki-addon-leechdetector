@@ -1,4 +1,3 @@
-import json
 import unittest
 from unittest.mock import mock_open, patch
 
@@ -31,7 +30,30 @@ class DummyDetector:
         return DummyLapseInfos(self.payload)
 
 
+class DummyQueryOp:
+    instances = []
+
+    def __init__(self, *, parent, op, success):
+        self.parent = parent
+        self.op = op
+        self.success = success
+        self.failure_callback = None
+        self.started = False
+        self.instances.append(self)
+
+    def failure(self, callback):
+        self.failure_callback = callback
+        return self
+
+    def run_in_background(self):
+        self.started = True
+
+
 class TestInitModule(unittest.TestCase):
+    def setUp(self):
+        addon._card_info_webviews.clear()
+        DummyQueryOp.instances.clear()
+
     def test_get_lapseinfos_for_card_injects_script(self):
         webview = DummyWebView()
 
@@ -40,7 +62,7 @@ class TestInitModule(unittest.TestCase):
         self.assertEqual(len(webview.eval_calls), 1)
         injected_script = webview.eval_calls[0]
         self.assertIn("Current Cycle Max Interval", injected_script)
-        self.assertIn("pycmd(\"leechdetector:getcard:\"", injected_script)
+        self.assertIn('"leechdetector:getcard:"', injected_script)
 
     def test_get_lapseinfos_for_card_logs_missing_template_key(self):
         webview = DummyWebView()
@@ -55,19 +77,35 @@ class TestInitModule(unittest.TestCase):
         self.assertEqual(webview.eval_calls, [])
         log_error.assert_called_once()
 
-    def test_handle_webview_did_receive_js_message_returns_payload_for_valid_card_id(self):
+    def test_handle_webview_did_receive_js_message_loads_payload_in_background(self):
+        webview = DummyWebView()
+        addon.get_lapseinfos_for_card(webview)
+        webview_token = next(iter(addon._card_info_webviews))
         detector = DummyDetector(payload={"card_id": "123", "leech_status": "Healthy"})
 
-        with patch("leechdetector.LeechDetector", return_value=detector):
-            handled, response_json = addon.handle_webview_did_receive_js_message(
+        with patch("leechdetector.LeechDetector", return_value=detector), \
+                patch("leechdetector.QueryOp", DummyQueryOp):
+            response = addon.handle_webview_did_receive_js_message(
                 False,
-                "leechdetector:getcard:123",
+                f"leechdetector:getcard:{webview_token}:7:123",
                 None,
             )
 
-        self.assertTrue(handled)
-        self.assertEqual(json.loads(response_json), {"card_id": "123", "leech_status": "Healthy"})
+            self.assertEqual(response, (True, None))
+            self.assertEqual(detector.received_card_ids, [])
+            self.assertEqual(len(DummyQueryOp.instances), 1)
+            query = DummyQueryOp.instances[0]
+            self.assertIs(query.parent, webview)
+            self.assertTrue(query.started)
+
+            payload = query.op(object())
+            query.success(payload)
+
         self.assertEqual(detector.received_card_ids, [123])
+        self.assertIn(
+            'window.leechDetectorReceive(7, 123, {"card_id": "123", "leech_status": "Healthy"});',
+            webview.eval_calls[-1],
+        )
 
     def test_handle_webview_did_receive_js_message_logs_invalid_card_id(self):
         original_handled = (False, None)

@@ -1,5 +1,7 @@
 import json
 import os
+import shutil
+import tempfile
 import unittest
 
 from anki.collection import Collection
@@ -13,7 +15,18 @@ class LeechDetectorTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.collection = Collection(os.path.join(THIS_DIR, "data/collection.anki2"))
+        cls.collection_tempdir = tempfile.TemporaryDirectory(
+            prefix="leechdetector-tests-"
+        )
+        collection_path = os.path.join(
+            cls.collection_tempdir.name,
+            "collection.anki2",
+        )
+        shutil.copy2(
+            os.path.join(THIS_DIR, "data/collection.anki2"),
+            collection_path,
+        )
+        cls.collection = Collection(collection_path)
         cls.leechdetector = LeechDetector(cls.collection)
 
         cls.card_ids_testset_reviewed = [1710712242101, 1708207159229, 1723541612090, 1708259347988, 1708787872864, 1716748875647, 1715717287839, 1711230892107, 1708440946044,
@@ -28,6 +41,11 @@ class LeechDetectorTest(unittest.TestCase):
         cls.total_card_count = len(cls.cards_ids_collection_all)
         cls.lapsed_card_collection = [lapse_info for lapse_info in cls.lapse_infos_collection if lapse_info.lapses_count > 0]
         cls.lapsed_card_count = len(cls.lapsed_card_collection)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.collection.close()
+        cls.collection_tempdir.cleanup()
 
 
     def test_get_max_successful_interval(self):
@@ -133,4 +151,3 @@ def group_lapse_info_by_key(lapseInfos, key_function, filter=lambda lapseInfo: T
             else:
                 distributionDrops[key] = 1
     return distributionDrops
-

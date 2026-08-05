@@ -71,6 +71,11 @@ From `Tools`, you can open `Leech Detector Summary` to quickly see:
 
 ## Release Notes :
 
+### Unreleased
+
+- Load Card Info lapse history in the background so it cannot block Anki's UI
+  while another collection operation is running.
+
 ### 2026/03/04
 
 - Support `leeches:*` in Stats / plugins searches

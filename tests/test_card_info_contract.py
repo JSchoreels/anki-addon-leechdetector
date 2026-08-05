@@ -23,6 +23,16 @@ class TestCardInfoContract(unittest.TestCase):
             js_content = js_file.read()
         self.assertRegex(js_content, r"\blapseInfos\.current_lapse_max_performance\b")
 
+    def test_js_uses_async_request_ids_to_ignore_stale_card_results(self):
+        js_path = os.path.join(ROOT_DIR, "leechdetector", "card_info_updated.js")
+        with open(js_path, "r") as js_file:
+            js_content = js_file.read()
+
+        self.assertIn("++latestLapseInfoRequest", js_content)
+        self.assertIn("window.leechDetectorReceive", js_content)
+        self.assertIn("requestId !== latestLapseInfoRequest", js_content)
+        self.assertIn("cardId !== get_cardid()", js_content)
+
     def test_html_and_js_use_same_dom_id_for_current_cycle_cell(self):
         html_path = os.path.join(ROOT_DIR, "leechdetector", "leechdetector_table.html")
         js_path = os.path.join(ROOT_DIR, "leechdetector", "card_info_updated.js")

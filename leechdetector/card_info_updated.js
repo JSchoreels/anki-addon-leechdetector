@@ -1,6 +1,8 @@
 const healthy_color = "#22c55e";
 const warning_color = "#fdba74";
 const alert_color = "#f87171";
+const leechDetectorWebviewToken = $webview_token;
+let latestLapseInfoRequest = 0;
 
 function add_lapse_stats() {
     const rows = document.querySelectorAll('tr');
@@ -79,21 +81,28 @@ function colorCells(cells, lapseInfos){
 }
 
 function request_lapseinfo(card_id) {
-    pycmd("leechdetector:getcard:" + card_id, (lapseInfos) => {
-        const extraStatsFields = {
-            leechStatusCell: document.querySelector('#leech_status'),
-            pastMaxIntervalsCell: document.querySelector('#past_max_intervals'),
-            currentLapseMaxIntervalsCell: document.querySelector('#current_lapse_max_performance'),
-            performanceDropCountCell: document.querySelector('#performance_drop_count'),
-            performanceDropRatioCell: document.querySelector('#performance_drop_ratio'),
-        }
+    const requestId = ++latestLapseInfoRequest;
+    pycmd(
+        "leechdetector:getcard:" + leechDetectorWebviewToken + ":" + requestId + ":" + card_id
+    );
+}
 
-        lapseInfos = JSON.parse(lapseInfos)
+window.leechDetectorReceive = (requestId, cardId, lapseInfos) => {
+    if (requestId !== latestLapseInfoRequest || cardId !== get_cardid()) {
+        return;
+    }
 
-        resetStyle(extraStatsFields)
-        updateCellsContent(extraStatsFields, lapseInfos)
-        colorCells(extraStatsFields, lapseInfos)
-    })
+    const extraStatsFields = {
+        leechStatusCell: document.querySelector('#leech_status'),
+        pastMaxIntervalsCell: document.querySelector('#past_max_intervals'),
+        currentLapseMaxIntervalsCell: document.querySelector('#current_lapse_max_performance'),
+        performanceDropCountCell: document.querySelector('#performance_drop_count'),
+        performanceDropRatioCell: document.querySelector('#performance_drop_ratio'),
+    }
+
+    resetStyle(extraStatsFields)
+    updateCellsContent(extraStatsFields, lapseInfos)
+    colorCells(extraStatsFields, lapseInfos)
 }
 
 function get_cardid(){
